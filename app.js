@@ -6,12 +6,18 @@ document.getElementById("searchButton").addEventListener("click", function () {
     return;
   }
 
-  const proxyUrl = "https://cors-anywhere.herokuapp.com/"; // Replace with your CORS proxy URL
-  const url = `${proxyUrl}?url=${encodeURIComponent(
-    `https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&search=${query}&language=en`
-  )}`;
+  const url = "https://www.wikidata.org/w/api.php";
+  const params = {
+    action: "wbsearchentities",
+    format: "json",
+    search: query,
+    language: "en",
+  };
 
-  fetch(url)
+  fetch(url, {
+    method: "GET",
+    params: params,
+  })
     .then((response) => response.json())
     .then((data) => {
       const resultsContainer = document.getElementById("results");
