@@ -13,6 +13,7 @@ document.getElementById("searchButton").addEventListener("click", function () {
     format: "json",
     search: searchTerm,
     language: "en",
+    limit: 30,
   };
 
   const queryString = new URLSearchParams(params).toString();
