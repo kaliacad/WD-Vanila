@@ -1,45 +1,62 @@
 document.getElementById("searchButton").addEventListener("click", function () {
-  const query = document.getElementById("searchQuery").value;
+  const searchTerm = document.getElementById("searchQuery").value.trim();
 
-  if (query === "") {
-    alert("Enter a subject of search please.");
+  if (!searchTerm) {
+    alert("Please enter a search term.");
     return;
   }
 
-  const url = "https://www.wikidata.org/w/api.php";
+  const endpoint = "https://www.wikidata.org/w/api.php";
   const params = {
+    origin: "*",
     action: "wbsearchentities",
     format: "json",
-    search: query,
+    search: searchTerm,
     language: "en",
   };
 
-  fetch(url, {
+  const queryString = new URLSearchParams(params).toString();
+
+  fetch(`${endpoint}?${queryString}`, {
     method: "GET",
-    params: params,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
   })
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       const resultsContainer = document.getElementById("results");
       resultsContainer.innerHTML = "";
 
-      const results = data.search;
+      if (data.search && data.search.length > 0) {
+        data.search.forEach((item) => {
+          const resultDiv = document.createElement("div");
+          resultDiv.className = "result";
 
-      if (results.length === 0) {
-        resultsContainer.innerHTML = "No result found.";
-        return;
+          const label = item.label || "No label";
+          const description = item.description || "No description";
+          const entityURL = `https://www.wikidata.org/wiki/${item.id}`;
+
+          resultDiv.innerHTML = `
+                  <strong>${label}</strong>: ${description}
+                  <br>
+                  <a href="${entityURL}" target="_blank">View on Wikidata</a>
+              `;
+
+          resultsContainer.appendChild(resultDiv);
+        });
+      } else {
+        resultsContainer.innerHTML = "No results found.";
       }
-
-      results.forEach((result) => {
-        const resultDiv = document.createElement("div");
-        resultDiv.className = "result";
-        resultDiv.innerHTML = `<strong>${result.label}</strong> - 
-            <a href="https://www.wikidata.org/wiki/${result.title}" target="_blank">View on Wikidata</a>`;
-        resultsContainer.appendChild(resultDiv);
-      });
     })
     .catch((error) => {
-      console.error("Error during Wikidata search:", error);
-      alert("An error occurred while searching.");
+      console.error("Request error:", error);
+      alert("An error occurred while processing the request.");
     });
 });
